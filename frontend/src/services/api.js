@@ -1,4 +1,8 @@
-const API_URL = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+const API_URL = (
+  process.env.NODE_ENV === 'production'
+    ? 'https://ethera-media.onrender.com'
+    : process.env.REACT_APP_API_URL || 'https://ethera-media.onrender.com'
+).replace(/\/$/, '');
 const CREATOR_EMAIL = (process.env.REACT_APP_CREATOR_EMAIL || 'ariesavy9@gmail.com').trim().toLowerCase();
 
 export function isCreatorUser(user) {
@@ -24,7 +28,10 @@ export async function apiRequest(path, options = {}) {
       if (!(error instanceof TypeError)) throw error;
       if (attempt === maxAttempts - 1) {
         const apiAddress = `${API_URL || window.location.origin}/api${path}`;
-        throw new Error(`Cannot reach the Ethera API at ${apiAddress}. Run "npm run start:backend" from the project root and check that port 5000 is available.`);
+        const recoveryHint = API_URL.includes('localhost')
+          ? 'Run "npm run start:backend" from the project root and check that port 5000 is available.'
+          : 'Check that the hosted backend service is online and reachable.';
+        throw new Error(`Cannot reach the Ethera API at ${apiAddress}. ${recoveryHint}`);
       }
       await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
     }
